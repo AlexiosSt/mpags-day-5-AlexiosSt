@@ -10,11 +10,9 @@ bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
     // Status flag to indicate whether or not the parsing was successful
     bool processStatus{true};
 
-    // Default to expecting information about one cipher
-    const std::size_t nExpectedCiphers{1};
-    settings.cipherType.reserve(nExpectedCiphers);
-    settings.cipherKey.reserve(nExpectedCiphers);
-
+    //Default number of ciphers
+    std::size_t nExpectedCiphers{1};
+ 
     // Process the arguments - ignore zeroth element, as we know this to be
     // the program name and don't need to worry about it
     const std::size_t nCmdLineArgs{cmdLineArgs.size()};
@@ -27,7 +25,30 @@ bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
             // Set the indicator and terminate the loop
             settings.versionRequested = true;
             break;
-        } else if (cmdLineArgs[i] == "-i") {
+
+        } else if (cmdLineArgs[i] == "--multi-cipher"){
+           // Expecting information about n ciphers
+           if (i == nCmdLineArgs-1){
+             std::cerr << "[error] --multi-cipher requires a positive integer argument\n";
+             processStatus = false; break;
+           }
+           else{
+             for (const auto& c : cmdLineArgs[i+1]){
+                //std::cout<<c<<std::endl;
+                if (!std::isdigit(c)) {
+                    std::cerr<<"[error] Please provide a positive integer as the --multi-cipher argument!\n";
+                    processStatus = false; break;
+                }
+            }
+             if (processStatus==false) break;
+             size_t nCiph = stoul(cmdLineArgs[i+1]); std::cout<<"OK, we will run with "<<nCiph<< " ciphers\n";
+             nExpectedCiphers=nCiph;
+             settings.cipherType.reserve(nExpectedCiphers);
+             settings.cipherKey.reserve(nExpectedCiphers);
+           }
+           ++i;
+        } 
+        else if (cmdLineArgs[i] == "-i") {
             // Handle input file option
             // Next element is filename unless "-i" is the last argument
             if (i == nCmdLineArgs - 1) {

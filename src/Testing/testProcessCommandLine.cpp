@@ -24,6 +24,15 @@ TEST_CASE("Version found correctly", "[commandline]")
     REQUIRE(settings.versionRequested);
 }
 
+TEST_CASE("Multi cipher without positive integer argument!", "[commandline]")
+{
+    ProgramSettings settings{false, false, "", "", {}, {}, CipherMode::Encrypt};
+    const std::vector<std::string> cmdLine{"mpags-cipher", "--multi-cipher", "rubbish"};
+    const bool res{processCommandLine(cmdLine, settings)};
+
+    REQUIRE(!res);
+}
+
 TEST_CASE("Encrypt mode activated")
 {
     ProgramSettings settings{false, false, "", "", {}, {}, CipherMode::Encrypt};

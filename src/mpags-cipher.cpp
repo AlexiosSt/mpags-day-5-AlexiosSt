@@ -34,22 +34,22 @@ int main(int argc, char* argv[])
     if (settings.helpRequested) {
         // Line splitting for readability
         std::cout
-            << "Usage: mpags-cipher [-h/--help] [--version] [-i <file>] [-o <file>] [-c <cipher>] [-k <key>] [--encrypt/--decrypt]\n\n"
+            << "Usage: mpags-cipher [-h/--help] [--version] [-i <file>] [-o <file>] [--multi-cipher <nciphers>] [-c <cipher>] [-k <key>] [--encrypt/--decrypt]\n\n"
             << "Encrypts/Decrypts input alphanumeric text using classical ciphers\n"
             << "Available options:\n\n"
-            << "  -h|--help        Print this help message and exit\n"
-            << "  --version        Print version information\n"
-            << "  -i FILE          Read text to be processed from FILE\n"
-            << "                   Stdin will be used if not supplied\n"
-            << "  -o FILE          Write processed text to FILE\n"
-            << "                   Stdout will be used if not supplied\n"
-            << "                   Stdout will be used if not supplied\n"
-            << "  -c CIPHER        Specify the cipher to be used to perform the encryption/decryption\n"
-            << "                   CIPHER can be caesar or playfair or vigenere - caesar is the default\n"
-            << "  -k KEY           Specify the cipher KEY\n"
-            << "                   A null key, i.e. no encryption, is used if not supplied\n"
-            << "  --encrypt        Will use the cipher to encrypt the input text (default behaviour)\n"
-            << "  --decrypt        Will use the cipher to decrypt the input text\n"
+            << "  -h|--help          Print this help message and exit\n"
+            << "  --version          Print version information\n"
+            << "  -i FILE            Read text to be processed from FILE\n"
+            << "                     Stdin will be used if not supplied\n"
+            << "  -o FILE            Write processed text to FILE\n"
+            << "                     Stdout will be used if not supplied\n"
+            << "  --multi-cipher NC  Specify the number of ciphers to be used - defaults to 1\n"
+            << "  -c CIPHER          Specify the cipher to be used to perform the encryption/decryption\n"
+            << "                     CIPHER can be caesar or playfair or vigenere - caesar is the default\n"
+            << "  -k KEY             Specify the cipher KEY\n"
+            << "                     A null key, i.e. no encryption, is used if not supplied\n"
+            << "  --encrypt          Will use the cipher to encrypt the input text (default behaviour)\n"
+            << "  --decrypt          Will use the cipher to decrypt the input text\n"
             << std::endl;
         // Help requires no further action, so return from main
         // with 0 used to indicate success
@@ -93,9 +93,25 @@ int main(int argc, char* argv[])
 
     std::string outputText;
 
-    auto cipher{CipherFactory::makeCipher(settings.cipherType[0], settings.cipherKey[0])};
-    outputText = cipher->applyCipher(inputText, settings.cipherMode);
+    std::vector <std::unique_ptr<Cipher>> myCiphers;
+
+    for (size_t i{0}; i<settings.cipherType.size(); ++i){
+        myCiphers.push_back( CipherFactory::makeCipher(settings.cipherType[i], settings.cipherKey[i]) );
+    }
     
+    if (settings.cipherMode==CipherMode::Encrypt){
+        for (const auto& v : myCiphers){
+            inputText = v->applyCipher(inputText, settings.cipherMode);
+        }
+    }
+    else{
+        for (auto it = myCiphers.rbegin(); it != myCiphers.rend(); ++it) {
+          inputText = (*it)->applyCipher(inputText, settings.cipherMode);  
+        }
+    }
+    
+    outputText=inputText;
+
     // Output the encrypted/decrypted text to stdout/file
     if (!settings.outputFile.empty()) {
         // Open the file and check that we can write to it
