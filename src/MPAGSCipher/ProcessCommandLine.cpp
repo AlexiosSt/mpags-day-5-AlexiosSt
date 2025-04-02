@@ -12,6 +12,8 @@ bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
 
     //Default number of ciphers
     std::size_t nExpectedCiphers{1};
+    settings.cipherType.reserve(nExpectedCiphers);
+    settings.cipherKey.reserve(nExpectedCiphers);
  
     // Process the arguments - ignore zeroth element, as we know this to be
     // the program name and don't need to worry about it
